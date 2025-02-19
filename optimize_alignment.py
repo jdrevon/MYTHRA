@@ -311,7 +311,7 @@ def image_optimization_selection(image, ref_image, min_FoV, min_pixelsize, path_
 
     
     
-def optimize_centering2(image_centered, path_data, min_FoV, min_pixelsize, path_filtered, chi2_filtered):
+def optimize_centering2(image_centered, path_data, min_FoV, min_pixelsize, path_filtered, chi2_filtered, chi2_threshold, chi2_mean_V2, chi2_mean_CP):
     
     index = np.where(np.abs(chi2_filtered - 1) == np.min(np.abs(chi2_filtered - 1)))[0][0]
     image_reference = image_centered[index]
@@ -327,8 +327,8 @@ def optimize_centering2(image_centered, path_data, min_FoV, min_pixelsize, path_
         )
         
         # Vérifier si l'image centrée doit être incluse
-        if np.median(chi2_filtered) < 10:
-            if np.logical_and(chi2_cp < 5, chi2_v2 < 5):
+        if np.median(chi2_filtered) < chi2_threshold:
+            if np.logical_and(chi2_cp < chi2_mean_V2, chi2_v2 < chi2_mean_CP):
                 images_centered.append(image_centered_tmp)
             else:
                 path_rejected = path_filtered[i]

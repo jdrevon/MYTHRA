@@ -27,9 +27,17 @@ path_data = [
 num_cores = 30 # number of parallelization of MiRA instance for the resampling
 maxeval = 50 # number of evaluation function to resample the image with MiRA and convegres on the solution
 
+bin_num = 10 
+negative_offset = 0.1
+window = 0.04
+
+ chi2_threshold= 10 
+ chi2_mean_V2 = 5 
+ chi2_mean_CP = 5
+
 for i in range(len(path_MiRA)):
     
-    path_filtered_tmp, FoV_filtered_tmp, pixsize_filtered_tmp, header_filtered_tmp, chi2_filtered_tmp, param_filtered_tmp, hyperparameter_filtered_tmp  = selected_data(path_MiRA[i], 10, 0.1, 0.04) #bin, negative offset, zindow
+    path_filtered_tmp, FoV_filtered_tmp, pixsize_filtered_tmp, header_filtered_tmp, chi2_filtered_tmp, param_filtered_tmp, hyperparameter_filtered_tmp  = selected_data(path_MiRA[i], bin_num, negative_offset, window) #bin, negative offset, zindow
 
     max_FoV, min_FoV, min_pixel_size = max(FoV_filtered_tmp), min(FoV_filtered_tmp), min(pixsize_filtered_tmp)/2
     
@@ -47,7 +55,7 @@ for i in range(len(path_MiRA)):
 
     padded_images, x_padded, y_padded = zero_pad_images_v2(resampled_images, FoV_filtered, max_FoV, min_pixel_size)
     images_centered = centering_function(padded_images, path_MiRA[i])
-    opt_images_centered = optimize_centering2(images_centered, path_data[i], min_FoV, min_pixel_size, path_filtered, chi2_filtered)
+    opt_images_centered = optimize_centering2(images_centered, path_data[i], min_FoV, min_pixel_size, path_filtered, chi2_filtered, chi2_threshold, chi2_mean_V2, chi2_mean_CP)
     
     mean_image, error_image  = mean_image_func(opt_images_centered, path_MiRA[i])
     new_mean_image, x_image, y_image = resize_mean_image(mean_image, min_pixel_size, min_FoV) # recentring the median images
