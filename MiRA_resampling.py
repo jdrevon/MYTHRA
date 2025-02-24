@@ -99,9 +99,9 @@ def mscatter(x,y,ax=None, m=None, **kw):
 
 def run_calculation_compactness(reg, param, pix, fov, h, path_param, maxeval, ftol, gtol, xtol, ftot, verb, prior_image, path_data):
 
-    path_hyper = path_param + 'reg_%s_FoV_%.1f_pixsize_%.1f_param_%.1f_mu_%.1E.fits' % (reg, fov, pix, param, h)
+    path_hyper = path_param + 'reg_%s_FoV_%.4f_pixsize_%.4f_param_%.4f_mu_%.4E.fits' % (reg, fov, pix, param, h)
 
-    os.system("ymira -pixelsize=%.1fmas -fov=%.1fmas -regul=%s -mu=%.1E -gamma=%imas" % (
+    os.system("ymira -pixelsize=%.4fmas -fov=%.4fmas -regul=%s -mu=%.4E -gamma=%imas" % (
         pix, fov, reg, h, param) + \
               " -ftol=%.1f -gtol=%.1f -xtol=%.1f -maxeval=%i -verb=%i -overwrite -save_visibilities -save_initial " % (
                   ftol, gtol, xtol, maxeval, verb) + \
@@ -112,9 +112,9 @@ def run_calculation_compactness(reg, param, pix, fov, h, path_param, maxeval, ft
 
 def run_calculation_hyperbolic(reg, param, pix, fov, h, path_param, maxeval, ftol, gtol, xtol, ftot, verb, prior_image, path_data):
 
-    path_hyper = path_param + 'reg_%s_FoV_%.1f_pixsize_%.1f_param_%.1E_mu_%.1E.fits' % (reg, fov, pix, param, h)
+    path_hyper = path_param + 'reg_%s_FoV_%.4f_pixsize_%.4f_param_%.4E_mu_%.4E.fits' % (reg, fov, pix, param, h)
 
-    os.system("ymira -pixelsize=%.1fmas -fov=%.1fmas -regul=%s -mu=%.1E -tau=%.1E" % (
+    os.system("ymira -pixelsize=%.4fmas -fov=%.4fmas -regul=%s -mu=%.4E -tau=%.4E" % (
         pix, fov, reg, h, param) + \
               " -ftol=%.1f -gtol=%.1f -xtol=%.1f -maxeval=%i -verb=%i -overwrite -save_visibilities -save_initial" % (
                   ftol, gtol, xtol, maxeval, verb) + \
@@ -131,9 +131,8 @@ def run_MiRA(DATA_OBS, path_data, prior_image, pixelsize, FoV, hyperparameter, p
     xtol = 0
     ftot = 1 #sum of total flux
     verb = int(maxeval/5)
-
     
-    path_param = path_save + 'FoV_%.1f_pixsize_%.1f_param_%.1f_mu_%.1E/' % (FoV, pixelsize, param, hyperparameter)
+    path_param = path_save + 'FoV_%.4f_pixsize_%.4f_param_%.4E_mu_%.4E/' % (FoV, pixelsize, param, hyperparameter)
                    
     if not os.path.exists(path_param):
         os.makedirs(path_param)
@@ -288,7 +287,7 @@ def run_MiRA(DATA_OBS, path_data, prior_image, pixelsize, FoV, hyperparameter, p
 def parallel_resampling(data_args):
     return run_MiRA(*data_args)
 
-def resampling_by_MiRA_parallelize(path_data, path_filtered, path_MiRA, FoV, param, hyperparameter, pixelsize, num_cores, maxeval):
+def resampling_by_MiRA_parallelize(path_data, path_filtered, path_MiRA, min_FoV, param, hyperparameter, pixelsize, num_cores, maxeval):
     
     new_path_all, image_all, chi2_all = [], [], []
     parent_path = os.path.dirname(path_MiRA.rstrip('/'))
@@ -303,7 +302,7 @@ def resampling_by_MiRA_parallelize(path_data, path_filtered, path_MiRA, FoV, par
     
     # Préparation des données pour chaque tâche
     data = [
-        (DATA_OBS, path_data, path_filtered[i], pixelsize, FoV[i], hyperparameter[i], param[i],  regularization, path_save, maxeval, num_cores, obs_res)
+        (DATA_OBS, path_data, path_filtered[i], pixelsize, min_FoV, hyperparameter[i], param[i],  regularization, path_save, maxeval, num_cores, obs_res)
         for i in range(len(path_filtered))
     ]
         

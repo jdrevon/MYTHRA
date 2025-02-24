@@ -7,10 +7,6 @@ Created on Fri Nov  1 16:15:52 2024
 
 import numpy as np
 from astropy.io import fits
-from scipy.ndimage import zoom
-from skimage.transform import resize
-from numpy.fft import fft2, ifft2, fftshift, ifftshift
-from scipy.ndimage import gaussian_filter
 
 
 

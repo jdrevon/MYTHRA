@@ -9,7 +9,6 @@ Created on Sun Nov  3 17:30:20 2024
 from PIL import Image
 import numpy as np
 from scipy.ndimage import shift
-import matplotlib.pyplot as plt
 from astropy.io import fits
 import time
 import cv2
@@ -30,7 +29,7 @@ def normalize_image(image):
     image = (image * 255).astype(np.uint8)  # Mettre entre 0 et 255
     return image
 
-def create_gif(images, output_path="aligned_images.gif", duration=100):
+def create_gif(images, output_path, duration=100):
     """
     Crée un GIF à partir d'une liste d'images normalisées.
     :param images: Liste d'images numpy alignées.
@@ -117,6 +116,8 @@ def centering_function(padded_images, path):
 
     # Center the reference (median image) on its photocenter
     centered_median = center_on_photocenter(median_image)
+
+    create_gif(padded_images, path + "/non-aligned_images.gif")
 
     # Initial alignment based on correlation discrepancy
     initial_aligned_images = []

@@ -12,7 +12,7 @@ from scipy.ndimage import shift
 from DATA_reading import OIFITS_READING_concatenate
 from numpy.fft import ifftshift, fftshift, fftfreq, fft2
 from scipy.interpolate import RegularGridInterpolator
-import matplotlib.pyplot as plt
+from extract_interferometric_quantities_from_image import reading_info_OIFITS, extract_header_info
 
 def create_coordinate_arrays(image_shape, x_center, y_center, x_scale, y_scale):
     x_size, y_size = image_shape
@@ -31,12 +31,12 @@ def resize_image(image_data, min_pixel_size, min_fov):
     
     # Dimension de l'image
     size = original_shape[0]
-    
     # Calculer la nouvelle taille de l'image en fonction du FoV
     new_size = int(min_fov / min_pixel_size)  # Nouvelle taille en nombre de pixels
+    print(size,new_size)
     
     # S'assurer que la nouvelle taille est inférieure à l'originale
-    if new_size >= size:
+    if new_size > size:
         raise ValueError("La nouvelle taille doit être plus petite que la taille originale.")
     
     # Calculer les indices pour le recadrage
@@ -123,6 +123,7 @@ def calculate_total_chi2(chi2_V2, chi2_CP, N_V2, N_CP):
     return chi2_total
 
 
+
 def reading_info_OIFITS_data(path_data):
     
     # Read data
@@ -207,7 +208,7 @@ def extract_V2_CP_from_image(image, pixelsize, q_u_interp, q_v_interp, q_u1, q_u
 
 
 
-def compare_model_obs_from_image(image, x_image, y_image, pixelsize, q_u, q_v, q_u1, q_u2, q_u3, q_v1, q_v2, q_v3, V2_MATISSE, V2_MATISSE_ERR, T3, T3_ERR):
+def compare_model_obs_from_image(image, pixelsize, q_u, q_v, q_u1, q_u2, q_u3, q_v1, q_v2, q_v3, V2_MATISSE, V2_MATISSE_ERR, T3, T3_ERR):
 
     def image_is_even(image):
         """Vérifie si les dimensions de l'image sont paires."""
@@ -277,17 +278,19 @@ def chi2_func_final(image_ref, image, min_pixelsize, min_FoV, q_u, q_v, q_u1, q_
     mean_image = (image + image_ref)/2    
     mean_image = mean_image/np.sum(mean_image)
     
-    mean_cropped, x_image, y_image = resize_image(mean_image, min_pixelsize, min_FoV)
+    #mean_cropped, x_image, y_image = resize_image(mean_image, min_pixelsize, min_FoV)    
     
     # Calculer les chi² CP et V2 en appelant la fonction existante
-    chi2_cp, chi2_v2, chi2_TOT, res_instru = compare_model_obs_from_image(mean_cropped, mas_to_rad(x_image), mas_to_rad(y_image), mas_to_rad(min_pixelsize), q_u, q_v, q_u1, q_u2, q_u3, q_v1, q_v2, q_v3, V2_MATISSE, V2_MATISSE_ERR, T3, T3_ERR)
-        
+    
+    print("Mean_image")
+
+    chi2_cp, chi2_v2, chi2_TOT, res_instru = compare_model_obs_from_image(mean_image, min_pixelsize, q_u, q_v, q_u1, q_u2, q_u3, q_v1, q_v2, q_v3, V2_MATISSE, V2_MATISSE_ERR, T3, T3_ERR)
+    
     return chi2_TOT, chi2_cp, chi2_v2
 
 
 
-def image_optimization_selection(image, ref_image, min_FoV, min_pixelsize, path_data, intensity_range=(0.1, 1.9), 
-                                                       max_iter=10, pixel_range=(-10, 10)):
+def image_optimization_selection(path_images, image,  ref_image, min_FoV, min_pixelsize, DATA_OBS):
     """
     :param image: Image à recentrer (np.array)
     :param ref_image: Image de référence (np.array)
@@ -300,10 +303,13 @@ def image_optimization_selection(image, ref_image, min_FoV, min_pixelsize, path_
     :param pixel_range: Plage initiale pour dx et dy (en pixels entiers)
     :return: Image alignée, meilleurs décalages dx, dy, et intensité optimale
     """
-    q_u, q_v, q_u1, q_u2, q_u3, q_v1, q_v2, q_v3, V2_MATISSE, V2_MATISSE_ERR, T3, T3_ERR = reading_info_OIFITS_data(path_data)
-
+    
+    print(path_images)
+    q_u, q_v, q_u1, q_u2, q_u3, q_v1, q_v2, q_v3, V2_MATISSE, V2_MATISSE_ERR, T3,image, header, T3_ERR = reading_info_OIFITS(DATA_OBS, path_images)
+    x_center, y_center, x_scale, y_scale = extract_header_info(header) #read header info
+    print(rad_to_mas(x_scale))
     # Calcul final du chi²
-    chi2_final, chi2_cp, chi2_v2 = chi2_func_final(ref_image, image, min_pixelsize, min_FoV, q_u, q_v, 
+    chi2_final, chi2_cp, chi2_v2 = chi2_func_final(ref_image, image, x_scale, min_FoV, q_u, q_v, 
                            q_u1, q_u2, q_u3, q_v1, q_v2, q_v3, V2_MATISSE, V2_MATISSE_ERR, T3, T3_ERR)
     print(f"chi² = {chi2_final:.6f}")
     
@@ -313,6 +319,8 @@ def image_optimization_selection(image, ref_image, min_FoV, min_pixelsize, path_
     
 def optimize_centering2(image_centered, path_data, min_FoV, min_pixelsize, path_filtered, chi2_filtered, chi2_threshold, chi2_mean_V2, chi2_mean_CP):
     
+    
+    DATA_OBS = OIFITS_READING_concatenate(path_data)
     index = np.where(np.abs(chi2_filtered - 1) == np.min(np.abs(chi2_filtered - 1)))[0][0]
     image_reference = image_centered[index]
     images_centered = []
@@ -323,7 +331,7 @@ def optimize_centering2(image_centered, path_data, min_FoV, min_pixelsize, path_
         
         # Effectuer le recentrage et obtenir les résultats
         image_centered_tmp, chi2_final, chi2_cp, chi2_v2 = image_optimization_selection(
-            image_centered[i], image_reference, min_FoV, min_pixelsize, path_data
+            path_filtered[i], image_centered[i], image_reference, min_FoV, min_pixelsize, DATA_OBS
         )
         
         # Vérifier si l'image centrée doit être incluse

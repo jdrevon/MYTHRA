@@ -13,6 +13,12 @@ from astropy.io import fits
 def extract_values_from_filename(filename):
     pattern = r"reg_(\w+)_FoV_(\d+\.\d+)_pixsize_(\d+\.\d+)_param_(\d+\.\d+)_mu_(\d+\.?\d*E?[+-]?\d*)"
     match = re.search(pattern, filename)
+    
+    if match == None:
+      pattern = r"reg_(\w+)_FoV_(\d+\.\d+)_pixsize_(\d+\.\d+)_param_(\d+\.?\d*E?[+-]?\d*)_mu_(\d+\.?\d*E?[+-]?\d*)"
+      match = re.search(pattern, filename)
+    
+    
     if match:
         return {
             "reg": match.group(1),
@@ -229,7 +235,7 @@ def selected_data(directory, num_bins, offset_percentage, factor, threshold=None
     note = np.array(note)
     # print(note=='C')
     # Filter the data
-    mask = (mu*pixsize**2 >= lower_limit) & (mu*pixsize**2 <= upper_limit) # & (note=='C') #& (chi2 <2) & (chi2 > 0.5) 
+    mask = (mu*pixsize**2 >= lower_limit) & (mu*pixsize**2 <= upper_limit) & (chi2 <3) & (chi2 > 0.5) 
     mu_filtered = mu[mask]
     chi2_filtered = chi2[mask]
     pixsize_filtered = pixsize[mask]

@@ -19,31 +19,28 @@ Created on Fri Jun  7 08:19:27 2024
 @author: jdrevon
 """
 
-from DATA_reading import OIFITS_READING_concatenate
-import matplotlib.pyplot as plt
 import numpy as np
 from numpy.fft import ifftshift, fftshift, fftfreq, fft2
 from astropy.io import fits
-from scipy.interpolate import RegularGridInterpolator, interpn
+from scipy.interpolate import RegularGridInterpolator
 from astropy import units as units
-import math
 from scipy.ndimage import shift
 
 def orientation_image(file_path):
 
     # Ouvrir le fichier FITS
     with fits.open(file_path) as hdul:
-        image = hdul[0].data  # Charger les données de l'image
+        image = hdul[0].data  # Charger les donnÃ©es de l'image
         header = hdul[0].header
         
         # Lire les valeurs de CDELT1 et CDELT2
-        cdelt1 = header.get('CDELT1', 1.0)  # Valeur par défaut 1.0 si absente
+        cdelt1 = header.get('CDELT1', 1.0)  # Valeur par dÃ©faut 1.0 si absente
         cdelt2 = header.get('CDELT2', 1.0)
         
         # Appliquer les flips sans modifier le header
-        if cdelt1 < 0:  # Flip horizontal si CDELT1 est négatif
+        if cdelt1 < 0:  # Flip horizontal si CDELT1 est nÃ©gatif
             image = np.flip(image, axis=1)
-        if cdelt2 < 0:  # Flip vertical si CDELT2 est négatif
+        if cdelt2 < 0:  # Flip vertical si CDELT2 est nÃ©gatif
             image = np.flip(image, axis=0)
     
     return image
@@ -246,7 +243,7 @@ def IMAGE_to_V2(DATA_OBS, path_image, padding):
         
         return padded_image
 
-    if image_is_even(image):  # Exemple de vérification
+    if image_is_even(image):  # Exemple de vÃ©rification
         print("Image paire")
     else:
         print("Image impaire")
