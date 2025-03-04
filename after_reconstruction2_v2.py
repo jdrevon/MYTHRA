@@ -18,12 +18,27 @@ from DATA_reading import OIFITS_READING_concatenate
 path_MiRA =    ["path_to_output/regularization/"]
 path_data = ["path_to_data/blabla.fits"]
 
+# General Parameters
+
 num_cores = 30 # number of parallelization of MiRA instance for the resampling
-maxeval = 50 # number of evaluation function to resample the image with MiRA and convegres on the solution
+
+# L-curve sampling parameters
 
 bin_num = 12 
 negative_offset = 0.10
 window = 0.04
+
+# Data selection from l-curve parameters
+
+chi2_boundaries      = False #True or False 
+chi2_boundaries_up   = 3 
+chi2_boundaries_down = 0.5
+
+# MiRA resampling parameters:
+
+maxeval = 50 # number of evaluation function to resample the image with MiRA and convegres on the solution
+
+# Outlayers detection:
 
 chi2_threshold= 10 
 chi2_mean_V2 = 5
@@ -31,7 +46,7 @@ chi2_mean_CP = 5
 
 for i in range(len(path_MiRA)):
     
-    path_filtered_tmp, FoV_filtered_tmp, pixsize_filtered_tmp, header_filtered_tmp, chi2_filtered_tmp, param_filtered_tmp, hyperparameter_filtered_tmp  = selected_data(path_MiRA[i], bin_num, negative_offset, window) 
+    path_filtered_tmp, FoV_filtered_tmp, pixsize_filtered_tmp, header_filtered_tmp, chi2_filtered_tmp, param_filtered_tmp, hyperparameter_filtered_tmp  = selected_data(path_MiRA[i], chi2_boundaries, chi2_boundaries_up, chi2_boundaries_down, bin_num, negative_offset, window) 
     DATA_OBS         = OIFITS_READING_concatenate(path_data[i])
     q_u_interp, q_v_interp, q_u1, q_u2, q_u3, q_v1, q_v2, q_v3, V2_MATISSE, V2_MATISSE_ERR, CP_MATISSE, image, header, CP_MATISSE_ERR = reading_info_OIFITS(DATA_OBS, path_filtered_tmp[0])
     x_center, y_center, x_scale, y_scale = extract_header_info(header) #read header info
@@ -42,6 +57,7 @@ for i in range(len(path_MiRA)):
     path_filtered  = resampling_by_MiRA_parallelize(path_data[i], path_filtered_tmp, path_MiRA[i], min_FoV, param_filtered_tmp, hyperparameter_filtered_tmp, min_pixel_size, num_cores, maxeval)
         
     resampled_images, chi2_filtered, FoV_filtered = extract_information_from_fits(path_filtered)
+    
     create_gif(resampled_images, path_MiRA[i] + "/MiRA-aligned_images.gif")
     
     max_FoV, min_FoV = max(FoV_filtered)[0], min(FoV_filtered)[0]
