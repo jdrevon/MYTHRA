@@ -83,7 +83,7 @@ def process_fits_files(directory, headers_data):
                             headers_data["first_header"].append(None)  # Aucun header trouvé pour la première table
 
 
-def selected_data(directory, num_bins, offset_percentage, factor, threshold=None):
+def selected_data(directory, chi2_boundaries, chi2_boundaries_up, chi2_boundaries_down, num_bins, offset_percentage, factor, threshold=None):
     import os
     import matplotlib.pyplot as plt
     import numpy as np
@@ -235,7 +235,11 @@ def selected_data(directory, num_bins, offset_percentage, factor, threshold=None
     note = np.array(note)
     # print(note=='C')
     # Filter the data
-    mask = (mu*pixsize**2 >= lower_limit) & (mu*pixsize**2 <= upper_limit) & (chi2 <3) & (chi2 > 0.5) 
+    
+    if chi2_boundaries == True:
+        mask = (mu*pixsize**2 >= lower_limit) & (mu*pixsize**2 <= upper_limit) & (chi2 <chi2_boundaries_up) & (chi2 > chi2_boundaries_down) 
+    else:
+        mask = (mu*pixsize**2 >= lower_limit) & (mu*pixsize**2 <= upper_limit)  
     mu_filtered = mu[mask]
     chi2_filtered = chi2[mask]
     pixsize_filtered = pixsize[mask]
